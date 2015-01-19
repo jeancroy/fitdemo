@@ -4,7 +4,7 @@
 /* global d3: true, _, console, distribution */
 
 fitdemo = (function(my, d3, _) {
-	// "use strict"
+	"use strict"
 	
 	var xt = {formatter: function(v) {
 	          		var a = Math.abs(v);
@@ -38,7 +38,7 @@ fitdemo = (function(my, d3, _) {
 
 	var xySwap = function(a) {
 		// eg. xySwap([[1,2],[3,4]]) = [[2,1],[4,3]]
-		b = [];
+		var b = [];
 		for (var i=0; i<a.length; i++) {
 			b.push([a[i][1], a[i][0]]);
 		}
@@ -79,7 +79,7 @@ fitdemo = (function(my, d3, _) {
 		var top = Math.floor(Math.pow(2,Math.random()*15))+9;
 		top = 500;
 		var params = [Math.random()+1.3, (Math.random()+0.25)*top/2, (Math.random()-0.5)*top/10];
-		console.log(params);
+		//console.log(params);
 		var w = distribution.weibull(params);
 		for (i=0; i<n; i++) {
 			p = (i+Math.random())/n;
