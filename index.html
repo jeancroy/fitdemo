@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+     <title>Curve Fit Demo</title>
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <link rel="stylesheet" href="lib/bootstrap-3.3.1/css/bootstrap.min.css"/>
+     <link rel="stylesheet" href="lib/bootstrap-3.3.1/css/bootstrap-theme.min.css"/>
+     <style>
+      .chart-heading { padding-top: 20px; font-weight: 500; }
+      .axis .tick line, .axis .domain { stroke: #CCC; }
+      .best-fit span { font-size: 140%; color: orange; font-weight: 500; }
+      .calculating { background-image: url(img/calculating.gif); width: 16px; height: 16px; float:left; }
+      .doing-calc { margin: 0 auto; width:290px; text-align:center; }
+      .frozen { pointer-events: none; }
+      #refit { margin-right: 10px;}
+     </style>
+</head>
+
+<body>
+
+  <div id="finish" class="container" role="main">
+    <div class="row">
+      <div class="col-sm-12">
+        <p>
+          The circles below show some randomly chosen points on a cumulative distribution function.
+          The blue curve connects them with straight lines.
+          The grey curve is the Weibull distribution which best fits the points.
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6" id="chart-container">
+        <div class="text-center">
+          <p class="chart-heading">Cumulative Probability Distribution</p>
+          <div id="cdf" style="min-height:315px"></div>
+          <p class="x-axis-label"><span data-react="quantity">value</span></p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="text-center">
+          <p class="chart-heading">Probability Density</p>
+          <div id="pdf" style="min-height:315px"></div>
+          <p class="x-axis-label"><span data-react="quantity">value</span></p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12" style="min-height:68px">
+        <br />
+        <div>
+          <div class="doing-calc">
+            <div class="calculating"></div>
+            <div style="margin-left: 26px;">Calculating best fit Weibull distribution...</div>
+          </div>
+          <p class="best-fit hide">
+            The best fit Weibull distribution has 
+            shape parameter <span class="best-fit-shape"></span>,
+            scale <span class="best-fit-scale"></span>,
+            and location <span class="best-fit-loc"></span>.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <button id="repeat" class="btn btn-primary pull-right" onclick="start()">Start over</button>
+        <button id="refit" class="btn btn-default pull-right hide" onclick="fitdemo.refit()">Improve fit</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-sm-12">
+        <div class="footnotes">
+          <div><span class="ref">*</span> Values interpolated using piecewise linear interpolation (the blue curve above)</div>
+          <div><span class="ref">**</span> Values interpolated using the Weibull cumulative distribution which minimises the squared deviation from the assessed points (the grey curve above)</div>
+        </div>
+      </div>
+    </div>          
+  
+  </div>
+
+  <script src="lib/jquery-1.11.1.min.js"></script>
+  <script src="lib/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+  <script src="lib/d3-3.5.2/d3.min.js"></script>
+  <script src="lib/underscore-min.js"></script>
+  <script src="lib/d3elements/src/xyChart.js"></script>
+  <script src="lib/cobyla/Cobyla.js"></script>
+  <script src="lib/distribution/weibull.js"></script>
+  <script src="nlFit.js"></script>
+  <script src="fitdemo.js"></script>
+
+  <script>
+    var start = function() {
+      fitdemo.choosePoints();
+      fitdemo.finish();
+    }
+    $(start);
+  </script>
+  
+</body>
+
+</html>

@@ -1,0 +1,3 @@
+[submodule "lib/d3elements"]
+	path = lib/d3elements
+	url = https://bitbucket.org/artstr/d3elements.git
