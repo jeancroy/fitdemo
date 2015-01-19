@@ -1,0 +1,16 @@
+{
+    //"asi"      : true,
+    "browser"  : true,
+    "eqeqeq"   : true,
+    "eqnull"   : true,
+    "es3"      : true,
+    //"expr"     : true,
+    //"jquery"   : true,
+    "lastsemic": true,
+    "latedef"  : true,
+    "nonbsp"   : true,
+    "strict"   : true,
+    "undef"    : true,
+    "unused"   : true
+}            
+

@@ -1,10 +1,10 @@
 /*
  * Fit Demo
  */
-/* global d3: true, _, console, distribution */
+/* global fitdemo: true, jQuery, d3, _, distribution, cobyla */
 
-fitdemo = (function(my, d3, _) {
-	"use strict"
+fitdemo = (function(my, $, d3, _, cobyla, distribution) {
+	"use strict";
 	
 	var xt = {formatter: function(v) {
 	          		var a = Math.abs(v);
@@ -43,7 +43,7 @@ fitdemo = (function(my, d3, _) {
 			b.push([a[i][1], a[i][0]]);
 		}
 		return b;
-	}
+	};
 	my.xySwap = xySwap;
 
 	var copyPtsArr = function(a) {
@@ -53,7 +53,7 @@ fitdemo = (function(my, d3, _) {
 			b.push([a[i][0], a[i][1]]);
 		}
 		return b;
-	}
+	};
 	my.copyPtsArr = copyPtsArr;
 
 	var updatePtsArr = function(a, b) {
@@ -67,7 +67,7 @@ fitdemo = (function(my, d3, _) {
 				a[j] = b[j];
 			}
 		}
-	}
+	};
 	my.updatePtsArr = updatePtsArr;
 
 
@@ -98,7 +98,7 @@ fitdemo = (function(my, d3, _) {
 			cdf.push([probs[i], vals[i]]);
 		}
 		xt.cdf = cdf;
-	}
+	};
 	my.choosePoints = choosePoints;
 
 
@@ -108,7 +108,7 @@ fitdemo = (function(my, d3, _) {
 		var x1=a[0], y1=a[1], x2=b[0], y2=b[1];
 		//console.log("interpolating between ","("+x1+","+y1+") and ("+x2+","+y2+")");
 		return y1 + (y2-y1)/(x2-x1)*(x-x1);
-	}
+	};
 
 	var interpolate = function(x, points) {
 		// given x and a list of sorted (by x) points [[x1,y1], [x2,y2], ...]
@@ -123,11 +123,11 @@ fitdemo = (function(my, d3, _) {
 			}
 		}
 		return interpolate2(x, points[points.length-2], points[points.length-1]);
-	}
+	};
 
 	var interpolateCDF = function(p) {
 		return interpolate(p, xt.cdf);
-	}
+	};
 	my.interpolateCDF = interpolateCDF;
 
 	//
@@ -141,7 +141,7 @@ fitdemo = (function(my, d3, _) {
 		xt.sampledPDFs = calcPDFsfromSampledCDFs(getSampled(200, [0,0.9995]));
 		displayBestFitParams(xt.fit.params);
 		updateFitCharts();
-	}
+	};
 
 
 	var finish = function() {
@@ -151,7 +151,7 @@ fitdemo = (function(my, d3, _) {
 			xt.sampledPDFs = calcPDFsfromSampledCDFs(xt.sampledCDFs);
 			updatePwLinearCDFChart();
 			updatePwLinearPDFChart();
-			if (typeof Worker=="undefined") {
+			if (typeof Worker==="undefined") {
 				setTimeout(function() {
 					$("body").scrollTop($("#finish-panel").offset().top-20);
 				},100);
@@ -169,7 +169,7 @@ fitdemo = (function(my, d3, _) {
 				worker.postMessage({cdf: xySwap(xt.cdf), 
 									start: undefined,
 									solverP: {maxFun: xt.fitIterations, rhoEnd: xt.rhoEnd},
-									median: interpolateCDF(.5), 
+									median: interpolateCDF(0.5), 
 									P01: interpolateCDF(0.01)});
 				worker.addEventListener("message", function(event) {
 					worker.terminate();
@@ -182,7 +182,7 @@ fitdemo = (function(my, d3, _) {
 				});
 			}
 		}, 10);
-	}
+	};
 	my.finish = finish;
 
 	var displayBestFitParams = function(params) {
@@ -194,7 +194,7 @@ fitdemo = (function(my, d3, _) {
 		$(".best-fit").hide();
 		$(".best-fit").removeClass("hide");
 		$(".best-fit").fadeIn();
-	}
+	};
 
 	//
 	// Application-specific functions
@@ -216,11 +216,11 @@ fitdemo = (function(my, d3, _) {
 		} else {
 			return null;
 		}
-	}
+	};
 
 	var weibullCDF = function(x, params) {
 		return distribution.weibull(params).cdf(x);
-	}
+	};
 	my.weibullCDF = weibullCDF;  // make it accessible as PRB.weibullCDF for debugging ease
 
 	var fitCDFtoWeibull = function() {
@@ -229,19 +229,17 @@ fitdemo = (function(my, d3, _) {
 		var pwLinearCDF = xySwap(xt.cdf);
 		var minX = pwLinearCDF[0][0], 
 			maxX = pwLinearCDF[pwLinearCDF.length-1][0];
-		var x;
-		var i, fittedCDF = [];
 		// estimate starting parameters as:
 		// shape = 1, scale = the median (P50), location = P01.
 		var start = [1, interpolateCDF(0.5), interpolateCDF(0.01)];
 		var solverP = {maxFun: Math.round(xt.fitIterations/3), rhoEnd: xt.rhoEnd};
-		p1 = cobyla.nlFit(pwLinearCDF, weibullCDF, start, [0,0], null, cobyla.constrainAsCDF, solverP);
+		var p1 = cobyla.nlFit(pwLinearCDF, weibullCDF, start, [0,0], null, cobyla.constrainAsCDF, solverP);
 		// have a second go, starting from scale = avg of min & max
 		var start2 = [1, (minX+maxX)/2, interpolateCDF(0.01)];
-		p2 = cobyla.nlFit(pwLinearCDF, weibullCDF, start2, [0,0], null, cobyla.constrainAsCDF, solverP);
+		var p2 = cobyla.nlFit(pwLinearCDF, weibullCDF, start2, [0,0], null, cobyla.constrainAsCDF, solverP);
 		// then take the better of the two and give it another run through the optimizer
 		var currBest = (p1.obj < p2.obj ? p1.params : p2.params);
-		p = cobyla.nlFit(pwLinearCDF, weibullCDF, currBest, [0,0], null, cobyla.constrainAsCDF, solverP);
+		var p = cobyla.nlFit(pwLinearCDF, weibullCDF, currBest, [0,0], null, cobyla.constrainAsCDF, solverP);
 		p.maxFun = Math.round(xt.fitIterations*2/3);
 
 		p.weibull = distribution.weibull(p.params);
@@ -251,7 +249,7 @@ fitdemo = (function(my, d3, _) {
 		// }
 		// p.fittedCDF = fittedCDF;
 		return p;
-	}
+	};
 
 	var getPercentiles = function(n) {
 		var i;
@@ -268,7 +266,7 @@ fitdemo = (function(my, d3, _) {
 			}
 		}
 		return {"assessed": perc, "fit": percFit };
-	}
+	};
 
 	var getSampled = function(n, fitRange) {
 		// if fitRange is not provided, the fit uses the same domain as the assessed CDF
@@ -298,7 +296,7 @@ fitdemo = (function(my, d3, _) {
 			}
 		}
 		return {"assessed": s, "fit": sFit };
-	}
+	};
 
 	var calcPDFfromCDF = function(cdf, noEnds) {
 		// the argument is a cdf, eg. [[v1,p1], [v2,p2], ...]
@@ -321,26 +319,24 @@ fitdemo = (function(my, d3, _) {
 			pdf.push([cdf[cdf.length-1][0],0]);
 		}
 		return pdf;
-	}
+	};
 	my.calcPDFfromCDF = calcPDFfromCDF;
 
 	var calcPDFsfromSampledCDFs = function(sampledCDFs) {
 		// loop through each type k of sampledCDF (ie. assessed, fit) and get PDF
 		// suppress the zero-endpts on the fit
-		var result = {}, 
-			i, pdf, cdf, midx, dx, dy;
+		var result = {};
 		for (var k in sampledCDFs) {
 			if (sampledCDFs.hasOwnProperty(k)) {
 				result[k] = calcPDFfromCDF(sampledCDFs[k], k==="fit");
 			}
 		}
 		return result;
-	}
+	};
 
 	var updatePwLinearCDFChart = function() {
 		var assessedCDF = xySwap(xt.cdf);  // just the assessed points
-		var sampled = xt.sampledCDFs["assessed"];
-		var i, j;
+		var sampled = xt.sampledCDFs.assessed;
 		if (!xt.cdfChart) { xt.cdfChart = setupChart().smartYFormat(true); }
 		if (!xt.cdfChartData) {
 			// really it's this in either case, but
@@ -355,12 +351,11 @@ fitdemo = (function(my, d3, _) {
 			updatePtsArr(xt.cdfChartData[2], assessedCDF);
 		}
 		d3.select("#cdf").datum(xt.cdfChartData).call(xt.cdfChart);
-	}
+	};
 	my.updatePwLinearCDFChart = updatePwLinearCDFChart;
 
 	var updatePwLinearPDFChart = function() {
-		var sampled = xt.sampledPDFs["assessed"];
-		var i, j;
+		var sampled = xt.sampledPDFs.assessed;
 		if (!xt.pdfChart) { xt.pdfChart = setupChart().yAxis(function(){}); }
 		if (!xt.pdfChartData) {
 			xt.pdfChartData = [copyPtsArr(sampled), copyPtsArr(sampled)];
@@ -368,7 +363,7 @@ fitdemo = (function(my, d3, _) {
 			updatePtsArr(xt.pdfChartData[0], sampled);
 		}
 		d3.select("#pdf").datum(xt.pdfChartData).call(xt.pdfChart);
-	}
+	};
 	my.updatePwLinearPDFChart = updatePwLinearPDFChart;
 
 
@@ -377,12 +372,12 @@ fitdemo = (function(my, d3, _) {
 		if (!xt.cdfChartData) { updatePwLinearCDFChart(); }
 		if (!xt.pdfChartData) { updatePwLinearPDFChart(); }
 		// to get animation to work, need to directly change the original var - not sure why?
-		updatePtsArr(xt.cdfChartData[1], xt.sampledCDFs["fit"]);
+		updatePtsArr(xt.cdfChartData[1], xt.sampledCDFs.fit);
 		d3.select("#cdf").datum(xt.cdfChartData).call(xt.cdfChart.duration(1100));
 
-		updatePtsArr(xt.pdfChartData[1], xt.sampledPDFs["fit"]);
+		updatePtsArr(xt.pdfChartData[1], xt.sampledPDFs.fit);
 		d3.select("#pdf").datum(xt.pdfChartData).call(xt.pdfChart.duration(1100));
-	}
+	};
 	my.updateFitCharts = updateFitCharts;
 
 
@@ -406,7 +401,7 @@ fitdemo = (function(my, d3, _) {
 				$("#refit").removeClass("hide");
 			}
 		});
-	}
+	};
 
 	//
 	// Boilerplate getter/setter functions
@@ -427,9 +422,9 @@ fitdemo = (function(my, d3, _) {
 			xt[name] = val;
 		}
 		return this;
-	}
+	};
 
 	return my;
 
-}(typeof fitdemo==="undefined" ? {} : fitdemo, d3, _));
+}(typeof fitdemo==="undefined" ? {} : fitdemo, jQuery, d3, _, cobyla, distribution));
 
