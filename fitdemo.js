@@ -15,7 +15,7 @@ fitdemo = (function(my, $, d3, _, cobyla, distribution) {
 	          		else if (a<200) { f = d3.format(".0f"); }
 	          		return f(v);
 	          	},
-	          fitIterations: 60000,
+	          fitIterations: 20000,
 	          rhoEnd: 1e-5, // when do we consider a fit finished?
 	          fit: null,
 	          percentiles: {},
