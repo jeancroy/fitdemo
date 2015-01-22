@@ -1,18 +1,15 @@
 /*
  * Fit Demo
  */
-
-self.addEventListener("message", function(event) {
-	importScripts("lib/cobyla/Cobyla.js", "lib/distribution/weibull.js", "nlFit.js");
-	postMessage(fitCDFtoWeibull(event.data.cdf, event.data.start, event.data.P01, event.data.median, event.data.solverP));
-});
+/* global self, importScripts, postMessage, distribution, cobyla */
 
 var weibullCDF = function(x, params) {
+	"use strict";
 	return distribution.weibull(params).cdf(x);
-}
+};
 
 var fitCDFtoWeibull = function(pwLinearCDF, start, P01, median, solverP) {
-	var x;
+	"use strict";
 	// if not provided, estimate starting parameters as:
 	// shape = 1, scale = the median (P50), location = P01.
 	if (!solverP) {
@@ -35,4 +32,11 @@ var fitCDFtoWeibull = function(pwLinearCDF, start, P01, median, solverP) {
 	var p = cobyla.nlFit(pwLinearCDF, weibullCDF, start, [0,0], null, cobyla.constrainAsCDF, solverP);
 	p.maxFun = maxFun;
 	return p;
-}
+};
+
+self.addEventListener("message", function(event) {
+	"use strict";
+	importScripts("lib/cobyla/Cobyla.js", "lib/distribution/weibull.js", "nlFit.js");
+	postMessage(fitCDFtoWeibull(event.data.cdf, event.data.start, event.data.P01, event.data.median, event.data.solverP));
+});
+
