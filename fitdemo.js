@@ -46,30 +46,6 @@ fitdemo = (function(my, $, d3, _, cobyla, distribution) {
 	};
 	my.xySwap = xySwap;
 
-	var copyPtsArr = function(a) {
-		// copies an array of the form [[x,y], [x2,y2], ...]
-		var i, b=[];
-		for (i=0; i<a.length; i++) {
-			b.push([a[i][0], a[i][1]]);
-		}
-		return b;
-	};
-	my.copyPtsArr = copyPtsArr;
-
-	var updatePtsArr = function(a, b) {
-		// updates a's x & y values with b's, in place
-		a.length = b.length;
-		for (var j=0; j<b.length; j++) {
-			if (a[j]) {
-				a[j][0] = b[j][0];
-				a[j][1] = b[j][1];
-			} else {
-				a[j] = b[j];
-			}
-		}
-	};
-	my.updatePtsArr = updatePtsArr;
-
 
 	var choosePoints = function() {
 		// sets xt.cdf to a random [[prob,val], ...] 
@@ -224,8 +200,7 @@ fitdemo = (function(my, $, d3, _, cobyla, distribution) {
 	my.weibullCDF = weibullCDF;  // make it accessible as PRB.weibullCDF for debugging ease
 
 	var fitCDFtoWeibull = function() {
-		// TODO: make p1,p2,p vars
-		// fit CDF to a Weibull 3-parameter CDF
+		// only used if Worker not available
 		var pwLinearCDF = xySwap(xt.cdf);
 		var minX = pwLinearCDF[0][0], 
 			maxX = pwLinearCDF[pwLinearCDF.length-1][0];
@@ -338,18 +313,7 @@ fitdemo = (function(my, $, d3, _, cobyla, distribution) {
 		var assessedCDF = xySwap(xt.cdf);  // just the assessed points
 		var sampled = xt.sampledCDFs.assessed;
 		if (!xt.cdfChart) { xt.cdfChart = setupChart().smartYFormat(true); }
-		if (!xt.cdfChartData) {
-			// really it's this in either case, but
-			// to get animation to work, also need to directly change the original var - not sure why?
-			xt.cdfChartData = [copyPtsArr(sampled), copyPtsArr(sampled), assessedCDF];
-		} else {
-			// hence this contorted code
-			// for (i=0; i<2; i++) {
-			// 	updatePtsArr(xt.cdfChartData[i], sampled);
-			// }
-			updatePtsArr(xt.cdfChartData[0], sampled);
-			updatePtsArr(xt.cdfChartData[2], assessedCDF);
-		}
+		xt.cdfChartData = [sampled, sampled, assessedCDF];
 		d3.select("#cdf").datum(xt.cdfChartData).call(xt.cdfChart);
 	};
 	my.updatePwLinearCDFChart = updatePwLinearCDFChart;
@@ -357,11 +321,7 @@ fitdemo = (function(my, $, d3, _, cobyla, distribution) {
 	var updatePwLinearPDFChart = function() {
 		var sampled = xt.sampledPDFs.assessed;
 		if (!xt.pdfChart) { xt.pdfChart = setupChart().yAxis(function(){}); }
-		if (!xt.pdfChartData) {
-			xt.pdfChartData = [copyPtsArr(sampled), copyPtsArr(sampled)];
-		} else {
-			updatePtsArr(xt.pdfChartData[0], sampled);
-		}
+		xt.pdfChartData = [sampled, sampled];
 		d3.select("#pdf").datum(xt.pdfChartData).call(xt.pdfChart);
 	};
 	my.updatePwLinearPDFChart = updatePwLinearPDFChart;
@@ -372,10 +332,10 @@ fitdemo = (function(my, $, d3, _, cobyla, distribution) {
 		if (!xt.cdfChartData) { updatePwLinearCDFChart(); }
 		if (!xt.pdfChartData) { updatePwLinearPDFChart(); }
 		// to get animation to work, need to directly change the original var - not sure why?
-		updatePtsArr(xt.cdfChartData[1], xt.sampledCDFs.fit);
+		xt.cdfChartData[1] = xt.sampledCDFs.fit;
 		d3.select("#cdf").datum(xt.cdfChartData).call(xt.cdfChart.duration(1100));
 
-		updatePtsArr(xt.pdfChartData[1], xt.sampledPDFs.fit);
+		xt.pdfChartData[1] = xt.sampledPDFs.fit;
 		d3.select("#pdf").datum(xt.pdfChartData).call(xt.pdfChart.duration(1100));
 	};
 	my.updateFitCharts = updateFitCharts;
